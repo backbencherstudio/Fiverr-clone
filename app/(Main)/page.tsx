@@ -37,20 +37,17 @@ export default function HomePage() {
     <div className="">
       <Filter />
       <Container>
-        <div className="grid grid-cols-1 gap-6.5 xl:grid-cols-4">
-          {gigs.length > 0 ? (
-            gigs.map((gig) => (
+        {gigs.length === 0 ? (
+          <div>
+            <p className="text-center text-4xl mt-20 text-gray-400">No gigs available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6.5 xl:grid-cols-4">
+            {gigs.map((gig) => (
               <GigCard key={gig.id} title={gig.title} imageSrc={gig.imageUrl} />
-            ))
-          ) : (
-            <>
-              <GigCard />
-              <GigCard />
-              <GigCard />
-              <GigCard />
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </Container>
     </div>
   );
