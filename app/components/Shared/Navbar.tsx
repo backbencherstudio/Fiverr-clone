@@ -82,9 +82,9 @@ export default function Navbar() {
             <div className="flex w-full max-w-145 items-center overflow-hidden rounded-md">
               <input
                 type="text"
-                defaultValue="full stack web developer"
+                placeholder="What service are you looking for today"
                 aria-label="Search services"
-                className="h-10.5 flex-1 border border-gray-300 focus:border-black rounded-l-md bg-transparent px-4 text-[15px] text-[#74767e] outline-none duration-300 placeholder:text-zinc-400"
+                className="h-10.5 flex-1 border border-gray-300 focus:border-black rounded-l-md bg-transparent px-4 font-medium text-[#74767e] outline-none duration-300 placeholder:text-zinc-400 placeholder:font-medium tracking-wide focus:placeholder:text-zinc-300"
               />
               <button
                 type="submit"
