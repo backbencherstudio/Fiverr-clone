@@ -5,12 +5,20 @@ import LevelIcon from "../icons/LevelIcon";
 import { TiStar } from "react-icons/ti";
 import VideoIcon from "../icons/VideoIcon";
 
-export default function GigCard() {
+type GigCardProps = {
+  title?: string;
+  imageSrc?: string;
+};
+
+export default function GigCard({
+  title = "I will be your professional full stack python django web developer",
+  imageSrc = "/card2.jpg",
+}: GigCardProps) {
   return (
     <div>
       <div className="rounded-xl bg-red-500 overflow-hidden relative">
         <Image
-          src="/card2.jpg"
+          src={imageSrc}
           alt="gig image"
           width={500}
           height={500}
@@ -45,7 +53,7 @@ export default function GigCard() {
           </div>
         </div>
       </div>
-      <h3 className="text-sm lg:text-base hover:underline cursor-pointer">I will be your professional full stack python django web developer</h3>
+      <h3 className="text-sm lg:text-base hover:underline cursor-pointer">{title}</h3>
       <div>
         <div className="flex items-center my-2">
             <TiStar size={22} />

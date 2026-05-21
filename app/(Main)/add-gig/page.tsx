@@ -10,6 +10,34 @@ type AddGigFormValues = {
   image: FileList;
 };
 
+type StoredGig = {
+  id: string;
+  title: string;
+  imageUrl: string;
+  imageName: string;
+  createdAt: string;
+};
+
+const GIG_STORAGE_KEY = "my-app-gigs";
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Unable to read image file"));
+    };
+
+    reader.onerror = () => reject(new Error("Unable to read image file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AddGigPage() {
   const {
     register,
@@ -40,11 +68,27 @@ export default function AddGigPage() {
   const onSubmit = async (data: AddGigFormValues) => {
     const image = data.image?.[0];
 
-    console.log({
+    if (!image) {
+      return;
+    }
+
+    const imageUrl = await readFileAsDataUrl(image);
+    const newGig: StoredGig = {
+      id: crypto.randomUUID(),
       title: data.title,
-      imageName: image?.name,
-      imageSize: image?.size,
-    });
+      imageUrl,
+      imageName: image.name,
+      createdAt: new Date().toISOString(),
+    };
+
+    const storedGigs: StoredGig[] = JSON.parse(
+      localStorage.getItem(GIG_STORAGE_KEY) ?? "[]"
+    );
+
+    localStorage.setItem(
+      GIG_STORAGE_KEY,
+      JSON.stringify([...storedGigs, newGig])
+    );
 
     reset();
     setImagePreview(null);
