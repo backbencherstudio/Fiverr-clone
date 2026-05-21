@@ -84,12 +84,12 @@ export default function GigDetail() {
               <img
                 src="/card.jpg"
                 alt="Gig preview"
-                className="w-full h-106] object-cover hover:scale-105 transition-transform duration-300"
+                className="w-full h-106 object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
           </section>
 
-          <aside className="max-w-104 w-full">
+          <aside className="max-w-106 w-full">
             <div className="sticky top-24">
               <div className="bg-white border border-zinc-200 rounded-md overflow-hidden">
                 <div className="flex mb-4 border-b border-zinc-200">
