@@ -22,7 +22,7 @@ export default function GigCard({
           alt="gig image"
           width={500}
           height={500}
-          className=" w-full h-full  object-cover scale-x-115"
+          className=" w-full h-49.5  object-cover scale-x-115"
         />
         <button className="absolute top-5 right-5">
           <BsHeart size={24} className="text-white" />
