@@ -6,23 +6,27 @@ import { TiStar } from "react-icons/ti";
 import VideoIcon from "../icons/VideoIcon";
 
 type GigCardProps = {
+  id?: string;
   title?: string;
   imageSrc?: string;
 };
 
 export default function GigCard({
+  id,
   title = "I will be your professional full stack python django web developer",
   imageSrc = "/card2.jpg",
 }: GigCardProps) {
+  const detailHref = id ? `/${id}` : undefined;
+
   return (
     <div>
-      <div className="rounded-xl bg-red-500 overflow-hidden relative">
+      <div className="rounded-xl overflow-hidden relative">
         <Image
           src={imageSrc}
           alt="gig image"
           width={500}
           height={500}
-          className=" w-full h-49.5  object-cover scale-x-115"
+          className=" w-full h-50 object-cover scale-x-110"
         />
         <button className="absolute top-5 right-5">
           <BsHeart size={24} className="text-white" />
@@ -53,7 +57,16 @@ export default function GigCard({
           </div>
         </div>
       </div>
-      <h3 className="text-sm lg:text-base hover:underline cursor-pointer">{title}</h3>
+      {detailHref ? (
+        <Link
+          href={detailHref}
+          className="text-sm lg:text-base cursor-pointer hover:underline"
+        >
+          {title}
+        </Link>
+      ) : (
+        <h3 className="text-sm lg:text-base cursor-pointer">{title}</h3>
+      )}
       <div>
         <div className="flex items-center my-2">
             <TiStar size={22} />

@@ -44,7 +44,12 @@ export default function HomePage() {
         ) : (
           <div className="grid grid-cols-1 gap-6.5 xl:grid-cols-4">
             {gigs.map((gig) => (
-              <GigCard key={gig.id} title={gig.title} imageSrc={gig.imageUrl} />
+              <GigCard
+                key={gig.id}
+                id={gig.id}
+                title={gig.title}
+                imageSrc={gig.imageUrl}
+              />
             ))}
           </div>
         )}
