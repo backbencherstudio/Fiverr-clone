@@ -1,8 +1,8 @@
 "use client";
 
 import Container from "@/app/components/Reusable/Container";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useMemo } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { FiImage, FiUploadCloud } from "react-icons/fi";
 
 type AddGigFormValues = {
@@ -19,6 +19,11 @@ type StoredGig = {
 };
 
 const GIG_STORAGE_KEY = "my-app-gigs";
+const TITLE_PREFIX = "I will do";
+
+function buildGigTitle(value: string) {
+  return `${TITLE_PREFIX} ${value.trim()}`.trim();
+}
 
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -42,28 +47,43 @@ export default function AddGigPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<AddGigFormValues>({
     mode: "onTouched",
+    defaultValues: {
+      title: "",
+    },
   });
 
-  const imageFiles = watch("image");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageFiles = useWatch({
+    control,
+    name: "image",
+  });
+  const titleField = register("title", {
+    required: "Gig title is required",
+    validate: (value) =>
+      value.trim().length > 0 ||
+      'Add a few words after "I will do"',
+  });
+  const imagePreview = useMemo(() => {
+    const file = imageFiles?.[0];
 
-  useEffect(() => {
-    if (!imageFiles?.length) {
-      setImagePreview(null);
-      return;
+    if (!file) {
+      return null;
     }
 
-    const file = imageFiles[0];
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
-
-    return () => URL.revokeObjectURL(previewUrl);
+    return URL.createObjectURL(file);
   }, [imageFiles]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const onSubmit = async (data: AddGigFormValues) => {
     const image = data.image?.[0];
@@ -75,7 +95,7 @@ export default function AddGigPage() {
     const imageUrl = await readFileAsDataUrl(image);
     const newGig: StoredGig = {
       id: crypto.randomUUID(),
-      title: data.title,
+      title: buildGigTitle(data.title),
       imageUrl,
       imageName: image.name,
       createdAt: new Date().toISOString(),
@@ -91,7 +111,6 @@ export default function AddGigPage() {
     );
 
     reset();
-    setImagePreview(null);
   };
 
   return (
@@ -122,21 +141,22 @@ export default function AddGigPage() {
                 >
                   Gig title
                 </label>
-                <input
-                  id="title"
-                  type="text"
-                  placeholder="I will build a modern website for your business"
-                  className={`h-12 w-full rounded-xl border bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-900 ${
+                <div
+                  className={`flex h-12 items-center rounded-xl border bg-white px-4 text-sm transition focus-within:border-zinc-900 ${
                     errors.title ? "border-red-400" : "border-zinc-300"
                   }`}
-                  {...register("title", {
-                    required: "Gig title is required",
-                    minLength: {
-                      value: 10,
-                      message: "Title must be at least 10 characters",
-                    },
-                  })}
-                />
+                >
+                  <span className="shrink-0 font-semibold text-zinc-900">
+                    {TITLE_PREFIX}
+                  </span>
+                  <input
+                    id="title"
+                    type="text"
+                    placeholder="modern website design for your business"
+                    className="h-full w-full bg-transparent pl-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
+                    {...titleField}
+                  />
+                </div>
                 {errors.title ? (
                   <p className="mt-2 text-sm text-red-500">{errors.title.message}</p>
                 ) : null}
@@ -210,7 +230,6 @@ export default function AddGigPage() {
                 type="button"
                 onClick={() => {
                   reset();
-                  setImagePreview(null);
                 }}
                 className="inline-flex h-12 items-center justify-center rounded-xl border border-zinc-300 px-5 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50"
               >
