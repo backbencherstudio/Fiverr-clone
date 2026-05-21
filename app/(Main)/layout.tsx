@@ -1,9 +1,11 @@
 import Navbar from "../components/Shared/Navbar";
+import Services from "../components/Shared/Services";
 
-export default function Mianlayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
       <Navbar/>
+      <Services/>
       {children}
       </div>
   )
