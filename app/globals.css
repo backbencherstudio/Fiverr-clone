@@ -6,3 +6,7 @@ body {
   background: #ffffff;
   color: #171717;
 }
+
+button{
+  @apply cursor-pointer
+}

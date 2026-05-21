@@ -1,6 +1,10 @@
+import Navbar from "../components/Shared/Navbar";
 
 export default function Mianlayout({ children }: { children: React.ReactNode }) {
   return (
-    <div>{children}</div>
+    <div>
+      <Navbar/>
+      {children}
+      </div>
   )
 }
