@@ -3,11 +3,52 @@
 import GitHeader from "@/app/components/GigDetails/GitHeader";
 import LevelIcon from "@/app/components/icons/LevelIcon";
 import Container from "@/app/components/Reusable/Container";
-import React, { useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { TiStar } from "react-icons/ti";
 
-export default function GigDetail() {
+type StoredGig = {
+  id: string;
+  title: string;
+  imageUrl: string;
+  imageName: string;
+  createdAt: string;
+};
+
+const GIG_STORAGE_KEY = "my-app-gigs";
+const defaultGigTitle =
+  "I will be your professional full stack python django web developer";
+const defaultGigImage = "/card.jpg";
+
+function readGigFromStorage(id: string): StoredGig | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storedGigs = window.localStorage.getItem(GIG_STORAGE_KEY);
+
+  if (!storedGigs) {
+    return null;
+  }
+
+  try {
+    const gigs: StoredGig[] = JSON.parse(storedGigs);
+    return gigs.find((gig) => gig.id === id) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export default function GigDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const [tab, setTab] = useState("Basic");
+  const [gigData, setGigData] = useState({
+    title: defaultGigTitle,
+    imageUrl: defaultGigImage,
+  });
 
   const plans: Record<
     string,
@@ -30,6 +71,19 @@ export default function GigDetail() {
     },
   };
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const currentGig = readGigFromStorage(id);
+
+      setGigData({
+        title: currentGig?.title ?? defaultGigTitle,
+        imageUrl: currentGig?.imageUrl ?? defaultGigImage,
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [id]);
+
   return (
     <div className="py-8">
       <GitHeader />
@@ -37,7 +91,7 @@ export default function GigDetail() {
         <div className="flex max-w-7xl mx-auto justify-between gap-25 mt-6">
           <section className="">
             <h1 className="text-[1.75rem] font-bold mb-3 w-[40ch] leading-[120%]">
-              I will be your professional full stack python django web developer
+              {gigData.title}
             </h1>
 
             <div className="flex items-center gap-4 mb-6">
@@ -82,7 +136,7 @@ export default function GigDetail() {
 
             <div className="relative border bg-[#f5f5f5] border-zinc-200 overflow-hidden py-4">
               <img
-                src="/card.jpg"
+                src={gigData.imageUrl}
                 alt="Gig preview"
                 className="w-full h-106 object-cover hover:scale-105 transition-transform duration-300"
               />
@@ -94,7 +148,7 @@ export default function GigDetail() {
               <div className="bg-white border border-zinc-200 rounded-md overflow-hidden">
                 <div className="flex mb-4 border-b border-zinc-200">
                   {(["Basic", "Standard", "Premium"] as const).map(
-                    (t, index) => (
+                    (t) => (
                       <button
                         key={t}
                         onClick={() => setTab(t)}
