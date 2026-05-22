@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BsHeart } from "react-icons/bs";
+import { BsHeart, BsTrash3 } from "react-icons/bs";
 import LevelIcon from "../icons/LevelIcon";
 import { TiStar } from "react-icons/ti";
 import VideoIcon from "../icons/VideoIcon";
@@ -9,12 +9,16 @@ type GigCardProps = {
   id?: string;
   title?: string;
   imageSrc?: string;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 };
 
 export default function GigCard({
   id,
   title = "I will be your professional full stack python django web developer",
   imageSrc = "/card2.jpg",
+  onDelete,
+  isDeleting = false,
 }: GigCardProps) {
   const detailHref = id ? `/${id}` : undefined;
 
@@ -74,6 +78,17 @@ export default function GigCard({
         </div>
         <p className="font-bold">From $100</p>
         <p className="font-semibold text-[#4d4d4e] flex gap-2 items-center mt-2"> <VideoIcon /> Offers video consultations</p>
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <BsTrash3 size={14} />
+            {isDeleting ? "Deleting..." : "Delete gig"}
+          </button>
+        ) : null}
       </div>
     </div>
   );

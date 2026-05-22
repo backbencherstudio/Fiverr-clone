@@ -1,40 +1,16 @@
 "use client";
 
+import { deleteImageFromImgBB } from "@/app/lib/imgbb";
+import { readStoredGigs, writeStoredGigs, type StoredGig } from "@/app/lib/gigs";
 import Container from "../components/Reusable/Container";
 import GigCard from "../components/Card/GigCard";
 import Filter from "../components/Filter/Filter";
 import { useEffect, useState } from "react";
 
-type StoredGig = {
-  id: string;
-  title: string;
-  imageUrl: string;
-  imageName: string;
-  createdAt: string;
-};
-
-const GIG_STORAGE_KEY = "my-app-gigs";
-
-function readStoredGigs() {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const storedGigs = window.localStorage.getItem(GIG_STORAGE_KEY);
-
-  if (!storedGigs) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(storedGigs) as StoredGig[];
-  } catch {
-    return [];
-  }
-}
-
 export default function HomePage() {
   const [gigs, setGigs] = useState<StoredGig[]>(() => readStoredGigs());
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingGigId, setDeletingGigId] = useState<string | null>(null);
 
   useEffect(() => {
     const syncGigs = () => {
@@ -50,10 +26,54 @@ export default function HomePage() {
     };
   }, []);
 
+  const handleDeleteGig = async (gigId: string) => {
+    const gig = gigs.find((item) => item.id === gigId);
+
+    if (!gig) {
+      return;
+    }
+
+    if (!gig.imageDeleteUrl) {
+      setDeleteError(
+        "This gig was created before ImgBB delete support was added. Re-upload it if you need remote image deletion."
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this gig and remove its image from ImgBB?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleteError(null);
+    setDeletingGigId(gigId);
+
+    try {
+      await deleteImageFromImgBB(gig.imageDeleteUrl);
+
+      const nextGigs = gigs.filter((item) => item.id !== gigId);
+      writeStoredGigs(nextGigs);
+      setGigs(nextGigs);
+    } catch {
+      setDeleteError("Unable to delete the image from ImgBB right now.");
+    } finally {
+      setDeletingGigId(null);
+    }
+  };
+
   return (
     <div className="">
       <Filter />
       <Container>
+        {deleteError ? (
+          <p className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {deleteError}
+          </p>
+        ) : null}
+
         {gigs.length === 0 ? (
           <div>
             <p className="text-center text-4xl mt-20 text-gray-400">No gigs available</p>
@@ -66,6 +86,8 @@ export default function HomePage() {
                 id={gig.id}
                 title={gig.title}
                 imageSrc={gig.imageUrl}
+                onDelete={() => void handleDeleteGig(gig.id)}
+                isDeleting={deletingGigId === gig.id}
               />
             ))}
           </div>

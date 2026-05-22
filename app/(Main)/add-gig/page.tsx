@@ -1,5 +1,7 @@
 "use client";
 
+import { writeStoredGigs, readStoredGigs, type StoredGig } from "@/app/lib/gigs";
+import { uploadImageToImgBB } from "@/app/lib/imgbb";
 import Container from "@/app/components/Reusable/Container";
 import React, { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -9,73 +11,11 @@ type AddGigFormValues = {
   title: string;
   image: FileList;
 };
-
-type StoredGig = {
-  id: string;
-  title: string;
-  imageUrl: string;
-  imageName: string;
-  createdAt: string;
-};
-
-const GIG_STORAGE_KEY = "my-app-gigs";
 const TITLE_PREFIX = "I will do";
-const IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
 const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY?.trim() ?? "";
 
 function buildGigTitle(value: string) {
   return `${TITLE_PREFIX} ${value.trim()}`.trim();
-}
-
-function readStoredGigs() {
-  const storedGigs = localStorage.getItem(GIG_STORAGE_KEY);
-
-  if (!storedGigs) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(storedGigs) as StoredGig[];
-  } catch {
-    return [];
-  }
-}
-
-async function uploadImageToImgBB(file: File) {
-  if (!IMGBB_API_KEY) {
-    throw new Error("Add NEXT_PUBLIC_IMGBB_API_KEY to upload images.");
-  }
-
-  const formData = new FormData();
-  formData.append("image", file);
-
-  const uploadResponse = await fetch(
-    `${IMGBB_UPLOAD_URL}?key=${encodeURIComponent(IMGBB_API_KEY)}`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
-
-  const payload = (await uploadResponse.json().catch(() => null)) as
-    | {
-        success?: boolean;
-        data?: {
-          url?: string;
-        };
-        error?: {
-          message?: string;
-        };
-      }
-    | null;
-
-  if (!uploadResponse.ok || !payload?.success || !payload.data?.url) {
-    throw new Error(
-      payload?.error?.message ?? "Image upload failed. Please try again."
-    );
-  }
-
-  return payload.data.url;
 }
 
 export default function AddGigPage() {
@@ -133,22 +73,21 @@ export default function AddGigPage() {
     }
 
     try {
-      const imageUrl = await uploadImageToImgBB(image);
+      const { imageUrl, imageDeleteUrl } = await uploadImageToImgBB(
+        image,
+        IMGBB_API_KEY
+      );
       const newGig: StoredGig = {
         id: crypto.randomUUID(),
         title: buildGigTitle(data.title),
         imageUrl,
         imageName: image.name,
+        imageDeleteUrl,
         createdAt: new Date().toISOString(),
       };
 
       const storedGigs = readStoredGigs();
-
-      localStorage.setItem(
-        GIG_STORAGE_KEY,
-        JSON.stringify([...storedGigs, newGig])
-      );
-      window.dispatchEvent(new Event("gigs-updated"));
+      writeStoredGigs([...storedGigs, newGig]);
 
       reset();
       setSubmitSuccess("Gig created and image stored with ImgBB.");
