@@ -162,16 +162,83 @@ export default function AddGigForm({
 
   return (
     <div className={variant === "modal" ? "" : "mx-auto max-w-2xl"}>
-      <div className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">
-          Gig setup
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-zinc-950">
-          Add your gig details
-        </h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Keep it simple: title, cover image, and profile image.
-        </p>
+      <div className="mb-6 flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Gig setup
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-zinc-950">
+            Add your gig details
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            Keep it simple: title, cover image, and profile image.
+          </p>
+        </div>
+
+        <div className="sm:w-42.5">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+            Profile image
+          </label>
+
+          <div
+            className={`rounded-xl border px-3 py-2.5 transition ${
+              errors.profileImage
+                ? "border-red-400 bg-red-50/40"
+                : "border-zinc-300 bg-white"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <label
+                htmlFor="profileImage"
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-50 transition hover:border-zinc-400"
+              >
+                {profileImagePreview ? (
+                  <img
+                    src={profileImagePreview}
+                    alt="Selected profile preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <FiUploadCloud className="h-3.5 w-3.5 text-zinc-500" />
+                )}
+              </label>
+
+              <div className="min-w-0">
+               
+                <label
+                  htmlFor="profileImage"
+                  className="mt-1.5 inline-flex cursor-pointer items-center rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-700 transition hover:bg-zinc-200"
+                >
+                  Choose
+                </label>
+              </div>
+            </div>
+
+            <input
+              id="profileImage"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              {...register("profileImage", {
+                required: "Profile image is required",
+                validate: {
+                  required: (files) =>
+                    files?.length ? true : "Profile image is required",
+                  fileSize: (files) =>
+                    !files?.[0] || files[0].size <= 32 * 1024 * 1024
+                      ? true
+                      : "Profile image must be 32 MB or smaller",
+                },
+              })}
+            />
+          </div>
+
+          {errors.profileImage ? (
+            <p className="mt-2 text-sm text-red-500">
+              {errors.profileImage.message}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <form
@@ -221,14 +288,14 @@ export default function AddGigForm({
             >
               <label
                 htmlFor="image"
-                className="flex min-h-52 cursor-pointer flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white px-6 py-8 text-center transition hover:border-zinc-400"
+                className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white px-6 py-8 text-center transition hover:border-zinc-400"
               >
                 {imagePreview ? (
                   <div className="flex w-full flex-col items-center gap-4">
                     <img
                       src={imagePreview}
                       alt="Selected preview"
-                      className="h-44 w-full max-w-md rounded-xl object-cover"
+                      className="h-32 w-full max-w-md rounded-xl object-cover"
                     />
                     <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
                       <FiImage className="h-4 w-4" />
@@ -280,78 +347,6 @@ export default function AddGigForm({
             {!IMGBB_API_KEY ? (
               <p className="mt-2 text-sm text-amber-600">
                 Add <code>NEXT_PUBLIC_IMGBB_API_KEY</code> to enable image uploads.
-              </p>
-            ) : null}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-zinc-900">
-              Profile image
-            </label>
-
-            <div
-              className={`rounded-2xl border border-dashed p-4 transition ${
-                errors.profileImage
-                  ? "border-red-400 bg-red-50/40"
-                  : "border-zinc-300 bg-zinc-50/60"
-              }`}
-            >
-              <label
-                htmlFor="profileImage"
-                className="flex min-h-52 cursor-pointer flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white px-6 py-8 text-center transition hover:border-zinc-400"
-              >
-                {profileImagePreview ? (
-                  <div className="flex w-full flex-col items-center gap-4">
-                    <img
-                      src={profileImagePreview}
-                      alt="Selected profile preview"
-                      className="h-36 w-36 rounded-full object-cover"
-                    />
-                    <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
-                      <FiImage className="h-4 w-4" />
-                      Profile preview selected
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 text-zinc-900">
-                      <FiUploadCloud className="h-6 w-6" />
-                    </div>
-                    <p className="mt-4 text-base font-semibold text-zinc-900">
-                      Upload a profile image
-                    </p>
-                    <p className="mt-1 max-w-sm text-sm text-zinc-500">
-                      This will be shown in the gig card and details page.
-                    </p>
-                    <p className="mt-4 rounded-full bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700">
-                      Click to choose a profile image
-                    </p>
-                  </>
-                )}
-              </label>
-
-              <input
-                id="profileImage"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                {...register("profileImage", {
-                  required: "Profile image is required",
-                  validate: {
-                    required: (files) =>
-                      files?.length ? true : "Profile image is required",
-                    fileSize: (files) =>
-                      !files?.[0] || files[0].size <= 32 * 1024 * 1024
-                        ? true
-                        : "Profile image must be 32 MB or smaller",
-                  },
-                })}
-              />
-            </div>
-
-            {errors.profileImage ? (
-              <p className="mt-2 text-sm text-red-500">
-                {errors.profileImage.message}
               </p>
             ) : null}
           </div>
