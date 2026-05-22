@@ -2,13 +2,20 @@ import AddButton from "../components/Shared/AddButton";
 import Navbar from "../components/Shared/Navbar";
 import Services from "../components/Shared/Services";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode;
+  modal: React.ReactNode;
+}) {
   return (
     <div>
-      <Navbar/>
-      <Services/>
+      <Navbar />
+      <Services />
       {children}
-      <AddButton/>
-      </div>
-  )
+      <AddButton />
+      {modal}
+    </div>
+  );
 }
