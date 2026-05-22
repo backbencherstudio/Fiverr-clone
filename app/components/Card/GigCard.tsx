@@ -4,6 +4,7 @@ import { BsHeart, BsTrash3 } from "react-icons/bs";
 import LevelIcon from "../icons/LevelIcon";
 import { TiStar } from "react-icons/ti";
 import VideoIcon from "../icons/VideoIcon";
+import { RiLoader2Fill } from "react-icons/ri";
 
 type GigCardProps = {
   id?: string;
@@ -23,7 +24,7 @@ export default function GigCard({
   const detailHref = id ? `/${id}` : undefined;
 
   return (
-    <div>
+    <div className = "relative group duration-300">
       <div className="rounded-xl overflow-hidden relative">
         <Image
           src={imageSrc}
@@ -83,10 +84,9 @@ export default function GigCard({
             type="button"
             onClick={onDelete}
             disabled={isDeleting}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+            className="absolute bottom-0 right-4 hidden group-hover:block mt-4 duration-200 items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <BsTrash3 size={14} />
-            {isDeleting ? "Deleting..." : "Delete gig"}
+            {isDeleting ? <RiLoader2Fill size={14} /> : <BsTrash3 size={14} />}
           </button>
         ) : null}
       </div>

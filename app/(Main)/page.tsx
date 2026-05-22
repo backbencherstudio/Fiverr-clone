@@ -1,7 +1,11 @@
 "use client";
 
 import { deleteImageFromImgBB } from "@/app/lib/imgbb";
-import { readStoredGigs, writeStoredGigs, type StoredGig } from "@/app/lib/gigs";
+import {
+  readStoredGigs,
+  writeStoredGigs,
+  type StoredGig,
+} from "@/app/lib/gigs";
 import Container from "../components/Reusable/Container";
 import GigCard from "../components/Card/GigCard";
 import Filter from "../components/Filter/Filter";
@@ -32,18 +36,15 @@ export default function HomePage() {
     if (!gig) {
       return;
     }
-
     if (!gig.imageDeleteUrl) {
       setDeleteError(
-        "This gig was created before ImgBB delete support was added. Re-upload it if you need remote image deletion."
+        "This gig was created before ImgBB delete support was added.",
       );
       return;
     }
-
     const confirmed = window.confirm(
-      "Delete this gig and remove its image from ImgBB?"
+      "Delete this gig and remove its image from ImgBB?",
     );
-
     if (!confirmed) {
       return;
     }
@@ -76,7 +77,9 @@ export default function HomePage() {
 
         {gigs.length === 0 ? (
           <div>
-            <p className="text-center text-4xl mt-20 text-gray-400">No gigs available</p>
+            <p className="text-center text-4xl mt-20 text-gray-400">
+              No gigs available
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6.5 xl:grid-cols-4">
