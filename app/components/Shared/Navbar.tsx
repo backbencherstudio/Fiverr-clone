@@ -53,8 +53,8 @@ const navItems = [
       "text-[15px] font-semibold text-[#74767e] transition-colors hover:text-green-600",
   },
   {
-    label: "Join",
-    href: "#",
+    label: "Add gig",
+    href: "/add-gig",
     variant: "cta",
     className:
       "inline-flex h-10 items-center justify-center rounded-md border border-zinc-900 px-4 text-[15px] font-semibold text-zinc-950 transition-colors hover:bg-zinc-950 hover:text-white",
@@ -126,10 +126,10 @@ export default function Navbar() {
 
           <div className="ml-auto flex items-center gap-2 lg:hidden">
             <Link
-              href="#"
+              href="/add-gig"
               className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-900 px-4 text-[14px] font-semibold text-zinc-950 transition-colors hover:bg-zinc-950 hover:text-white "
             >
-              Join
+              Add Gig
             </Link>
             <button
               type="button"
