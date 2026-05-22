@@ -106,7 +106,7 @@ export default function GigDetail({
 
             <div className="mb-6 flex items-center gap-4">
               <img
-                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80&auto=format&fit=crop"
+                src="/profile.jpg"
                 alt="author"
                 className="h-14 w-14 rounded-full object-cover"
               />

@@ -12,7 +12,7 @@ import Filter from "../components/Filter/Filter";
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [gigs, setGigs] = useState<StoredGig[]>(() => readStoredGigs());
+  const [gigs, setGigs] = useState<StoredGig[] | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingGigId, setDeletingGigId] = useState<string | null>(null);
 
@@ -21,6 +21,7 @@ export default function HomePage() {
       setGigs(readStoredGigs());
     };
 
+    syncGigs();
     window.addEventListener("storage", syncGigs);
     window.addEventListener("gigs-updated", syncGigs);
 
@@ -31,6 +32,10 @@ export default function HomePage() {
   }, []);
 
   const handleDeleteGig = async (gigId: string) => {
+    if (!gigs) {
+      return;
+    }
+
     const gig = gigs.find((item) => item.id === gigId);
 
     if (!gig) {
@@ -75,7 +80,11 @@ export default function HomePage() {
           </p>
         ) : null}
 
-        {gigs.length === 0 ? (
+        {gigs === null ? (
+          <div className="mt-20 flex justify-center">
+            <p className="text-sm text-gray-400">Loading gigs...</p>
+          </div>
+        ) : gigs.length === 0 ? (
           <div>
             <p className="text-center text-4xl mt-20 text-gray-400">
               No gigs available
