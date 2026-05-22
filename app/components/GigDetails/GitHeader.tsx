@@ -1,11 +1,8 @@
 import {
-  FiChevronRight,
   FiHeart,
   FiHome,
   FiMoreHorizontal,
-  FiShare2,
 } from "react-icons/fi";
-import Container from "../Reusable/Container";
 import Link from "next/link";
 import ShareIcon from "../icons/ShareIcon";
 export default function GitHeader() {

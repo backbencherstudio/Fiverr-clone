@@ -1,7 +1,7 @@
 "use client";
 
 import Container from "@/app/components/Reusable/Container";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { FiImage, FiUploadCloud } from "react-icons/fi";
 
@@ -20,30 +20,67 @@ type StoredGig = {
 
 const GIG_STORAGE_KEY = "my-app-gigs";
 const TITLE_PREFIX = "I will do";
+const IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
+const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY?.trim() ?? "";
 
 function buildGigTitle(value: string) {
   return `${TITLE_PREFIX} ${value.trim()}`.trim();
 }
 
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
+function readStoredGigs() {
+  const storedGigs = localStorage.getItem(GIG_STORAGE_KEY);
 
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-        return;
+  if (!storedGigs) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(storedGigs) as StoredGig[];
+  } catch {
+    return [];
+  }
+}
+
+async function uploadImageToImgBB(file: File) {
+  if (!IMGBB_API_KEY) {
+    throw new Error("Add NEXT_PUBLIC_IMGBB_API_KEY to upload images.");
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const uploadResponse = await fetch(
+    `${IMGBB_UPLOAD_URL}?key=${encodeURIComponent(IMGBB_API_KEY)}`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  const payload = (await uploadResponse.json().catch(() => null)) as
+    | {
+        success?: boolean;
+        data?: {
+          url?: string;
+        };
+        error?: {
+          message?: string;
+        };
       }
+    | null;
 
-      reject(new Error("Unable to read image file"));
-    };
+  if (!uploadResponse.ok || !payload?.success || !payload.data?.url) {
+    throw new Error(
+      payload?.error?.message ?? "Image upload failed. Please try again."
+    );
+  }
 
-    reader.onerror = () => reject(new Error("Unable to read image file"));
-    reader.readAsDataURL(file);
-  });
+  return payload.data.url;
 }
 
 export default function AddGigPage() {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -86,31 +123,49 @@ export default function AddGigPage() {
   }, [imagePreview]);
 
   const onSubmit = async (data: AddGigFormValues) => {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
     const image = data.image?.[0];
 
     if (!image) {
       return;
     }
 
-    const imageUrl = await readFileAsDataUrl(image);
-    const newGig: StoredGig = {
-      id: crypto.randomUUID(),
-      title: buildGigTitle(data.title),
-      imageUrl,
-      imageName: image.name,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const imageUrl = await uploadImageToImgBB(image);
+      const newGig: StoredGig = {
+        id: crypto.randomUUID(),
+        title: buildGigTitle(data.title),
+        imageUrl,
+        imageName: image.name,
+        createdAt: new Date().toISOString(),
+      };
 
-    const storedGigs: StoredGig[] = JSON.parse(
-      localStorage.getItem(GIG_STORAGE_KEY) ?? "[]"
-    );
+      const storedGigs = readStoredGigs();
 
-    localStorage.setItem(
-      GIG_STORAGE_KEY,
-      JSON.stringify([...storedGigs, newGig])
-    );
+      localStorage.setItem(
+        GIG_STORAGE_KEY,
+        JSON.stringify([...storedGigs, newGig])
+      );
+      window.dispatchEvent(new Event("gigs-updated"));
 
-    reset();
+      reset();
+      setSubmitSuccess("Gig created and image stored with ImgBB.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "QuotaExceededError") {
+        setSubmitError(
+          "Local storage is still full from older saved images. Clear old gigs once, then try again."
+        );
+        return;
+      }
+
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Unable to save this gig right now."
+      );
+    }
   };
 
   return (
@@ -213,8 +268,14 @@ export default function AddGigPage() {
                     className="hidden"
                     {...register("image", {
                       required: "Cover image is required",
-                      validate: (files) =>
-                        files?.length ? true : "Cover image is required",
+                      validate: {
+                        required: (files) =>
+                          files?.length ? true : "Cover image is required",
+                        fileSize: (files) =>
+                          !files?.[0] || files[0].size <= 32 * 1024 * 1024
+                            ? true
+                            : "Image must be 32 MB or smaller",
+                      },
                     })}
                   />
                 </div>
@@ -222,13 +283,33 @@ export default function AddGigPage() {
                 {errors.image ? (
                   <p className="mt-2 text-sm text-red-500">{errors.image.message}</p>
                 ) : null}
+
+                {!IMGBB_API_KEY ? (
+                  <p className="mt-2 text-sm text-amber-600">
+                    Add <code>NEXT_PUBLIC_IMGBB_API_KEY</code> to enable image uploads.
+                  </p>
+                ) : null}
               </div>
             </div>
+
+            {submitError ? (
+              <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {submitError}
+              </p>
+            ) : null}
+
+            {submitSuccess ? (
+              <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {submitSuccess}
+              </p>
+            ) : null}
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
                 onClick={() => {
+                  setSubmitError(null);
+                  setSubmitSuccess(null);
                   reset();
                 }}
                 className="inline-flex h-12 items-center justify-center rounded-xl border border-zinc-300 px-5 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50"
@@ -237,7 +318,7 @@ export default function AddGigPage() {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !IMGBB_API_KEY}
                 className="inline-flex h-12 items-center justify-center rounded-xl bg-zinc-950 px-6 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? "Saving..." : "Create gig"}

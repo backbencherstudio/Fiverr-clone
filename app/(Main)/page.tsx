@@ -15,22 +15,39 @@ type StoredGig = {
 
 const GIG_STORAGE_KEY = "my-app-gigs";
 
+function readStoredGigs() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const storedGigs = window.localStorage.getItem(GIG_STORAGE_KEY);
+
+  if (!storedGigs) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(storedGigs) as StoredGig[];
+  } catch {
+    return [];
+  }
+}
+
 export default function HomePage() {
-  const [gigs, setGigs] = useState<StoredGig[]>([]);
+  const [gigs, setGigs] = useState<StoredGig[]>(() => readStoredGigs());
 
   useEffect(() => {
-    const storedGigs = localStorage.getItem(GIG_STORAGE_KEY);
+    const syncGigs = () => {
+      setGigs(readStoredGigs());
+    };
 
-    if (!storedGigs) {
-      setGigs([]);
-      return;
-    }
+    window.addEventListener("storage", syncGigs);
+    window.addEventListener("gigs-updated", syncGigs);
 
-    try {
-      setGigs(JSON.parse(storedGigs));
-    } catch {
-      setGigs([]);
-    }
+    return () => {
+      window.removeEventListener("storage", syncGigs);
+      window.removeEventListener("gigs-updated", syncGigs);
+    };
   }, []);
 
   return (
