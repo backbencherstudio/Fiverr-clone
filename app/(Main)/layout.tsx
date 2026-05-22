@@ -1,4 +1,3 @@
-import AddButton from "../components/Shared/AddButton";
 import Navbar from "../components/Shared/Navbar";
 import Services from "../components/Shared/Services";
 
@@ -14,7 +13,7 @@ export default function MainLayout({
       <Navbar />
       <Services />
       {children}
-      <AddButton />
+      {/* <AddButton /> */}
       {modal}
     </div>
   );

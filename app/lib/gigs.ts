@@ -4,6 +4,9 @@ export type StoredGig = {
   imageUrl: string;
   imageName: string;
   imageDeleteUrl?: string;
+  profileImageUrl?: string;
+  profileImageName?: string;
+  profileImageDeleteUrl?: string;
   createdAt: string;
 };
 

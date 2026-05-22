@@ -1,6 +1,6 @@
 "use client";
 
-import { uploadImageToImgBB } from "@/app/lib/imgbb";
+import { deleteImageFromImgBB, uploadImageToImgBB } from "@/app/lib/imgbb";
 import { readStoredGigs, writeStoredGigs, type StoredGig } from "@/app/lib/gigs";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -9,6 +9,7 @@ import { FiImage, FiUploadCloud } from "react-icons/fi";
 type AddGigFormValues = {
   title: string;
   image: FileList;
+  profileImage: FileList;
 };
 
 type AddGigFormProps = {
@@ -46,6 +47,10 @@ export default function AddGigForm({
     control,
     name: "image",
   });
+  const profileImageFiles = useWatch({
+    control,
+    name: "profileImage",
+  });
   const titleField = register("title", {
     required: "Gig title is required",
     validate: (value) => value.trim().length > 0 || 'Add a few words after "I will do"',
@@ -59,6 +64,15 @@ export default function AddGigForm({
 
     return URL.createObjectURL(file);
   }, [imageFiles]);
+  const profileImagePreview = useMemo(() => {
+    const file = profileImageFiles?.[0];
+
+    if (!file) {
+      return null;
+    }
+
+    return URL.createObjectURL(file);
+  }, [profileImageFiles]);
 
   useEffect(() => {
     return () => {
@@ -68,27 +82,48 @@ export default function AddGigForm({
     };
   }, [imagePreview]);
 
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+    };
+  }, [profileImagePreview]);
+
   const onSubmit = async (data: AddGigFormValues) => {
     setSubmitError(null);
     setSubmitSuccess(null);
 
     const image = data.image?.[0];
+    const profileImage = data.profileImage?.[0];
 
-    if (!image) {
+    if (!image || !profileImage) {
       return;
     }
 
+    let imageDeleteUrl: string | undefined;
+    let profileImageDeleteUrl: string | undefined;
+
     try {
-      const { imageUrl, imageDeleteUrl } = await uploadImageToImgBB(
+      const { imageUrl, imageDeleteUrl: nextImageDeleteUrl } = await uploadImageToImgBB(
         image,
         IMGBB_API_KEY,
       );
+      imageDeleteUrl = nextImageDeleteUrl;
+      const {
+        imageUrl: profileImageUrl,
+        imageDeleteUrl: nextProfileImageDeleteUrl,
+      } = await uploadImageToImgBB(profileImage, IMGBB_API_KEY);
+      profileImageDeleteUrl = nextProfileImageDeleteUrl;
       const newGig: StoredGig = {
         id: crypto.randomUUID(),
         title: buildGigTitle(data.title),
         imageUrl,
         imageName: image.name,
         imageDeleteUrl,
+        profileImageUrl,
+        profileImageName: profileImage.name,
+        profileImageDeleteUrl,
         createdAt: new Date().toISOString(),
       };
 
@@ -101,8 +136,15 @@ export default function AddGigForm({
         return;
       }
 
-      setSubmitSuccess("Gig created and image stored with ImgBB.");
+      setSubmitSuccess("Gig created and both images stored with ImgBB.");
     } catch (error) {
+      if (profileImageDeleteUrl) {
+        void deleteImageFromImgBB(profileImageDeleteUrl).catch(() => undefined);
+      }
+      if (imageDeleteUrl) {
+        void deleteImageFromImgBB(imageDeleteUrl).catch(() => undefined);
+      }
+
       if (error instanceof DOMException && error.name === "QuotaExceededError") {
         setSubmitError(
           "Local storage is still full from older saved images. Clear old gigs once, then try again.",
@@ -128,7 +170,7 @@ export default function AddGigForm({
           Add your gig details
         </h1>
         <p className="mt-2 text-sm text-zinc-500">
-          Keep it simple: just a title and a cover image.
+          Keep it simple: title, cover image, and profile image.
         </p>
       </div>
 
@@ -238,6 +280,78 @@ export default function AddGigForm({
             {!IMGBB_API_KEY ? (
               <p className="mt-2 text-sm text-amber-600">
                 Add <code>NEXT_PUBLIC_IMGBB_API_KEY</code> to enable image uploads.
+              </p>
+            ) : null}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-zinc-900">
+              Profile image
+            </label>
+
+            <div
+              className={`rounded-2xl border border-dashed p-4 transition ${
+                errors.profileImage
+                  ? "border-red-400 bg-red-50/40"
+                  : "border-zinc-300 bg-zinc-50/60"
+              }`}
+            >
+              <label
+                htmlFor="profileImage"
+                className="flex min-h-52 cursor-pointer flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white px-6 py-8 text-center transition hover:border-zinc-400"
+              >
+                {profileImagePreview ? (
+                  <div className="flex w-full flex-col items-center gap-4">
+                    <img
+                      src={profileImagePreview}
+                      alt="Selected profile preview"
+                      className="h-36 w-36 rounded-full object-cover"
+                    />
+                    <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
+                      <FiImage className="h-4 w-4" />
+                      Profile preview selected
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 text-zinc-900">
+                      <FiUploadCloud className="h-6 w-6" />
+                    </div>
+                    <p className="mt-4 text-base font-semibold text-zinc-900">
+                      Upload a profile image
+                    </p>
+                    <p className="mt-1 max-w-sm text-sm text-zinc-500">
+                      This will be shown in the gig card and details page.
+                    </p>
+                    <p className="mt-4 rounded-full bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700">
+                      Click to choose a profile image
+                    </p>
+                  </>
+                )}
+              </label>
+
+              <input
+                id="profileImage"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                {...register("profileImage", {
+                  required: "Profile image is required",
+                  validate: {
+                    required: (files) =>
+                      files?.length ? true : "Profile image is required",
+                    fileSize: (files) =>
+                      !files?.[0] || files[0].size <= 32 * 1024 * 1024
+                        ? true
+                        : "Profile image must be 32 MB or smaller",
+                  },
+                })}
+              />
+            </div>
+
+            {errors.profileImage ? (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.profileImage.message}
               </p>
             ) : null}
           </div>

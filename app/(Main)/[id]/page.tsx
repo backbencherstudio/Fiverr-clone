@@ -12,6 +12,7 @@ import { TiStar } from "react-icons/ti";
 const defaultGigTitle =
   "I will be your professional full stack python django web developer";
 const defaultGigImage = "/card.jpg";
+const defaultProfileImage = "/profile.jpg";
 
 export default function GigDetail({
   params,
@@ -24,6 +25,7 @@ export default function GigDetail({
   const [gigData, setGigData] = useState({
     title: defaultGigTitle,
     imageUrl: defaultGigImage,
+    profileImageUrl: defaultProfileImage,
   });
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -56,6 +58,7 @@ export default function GigDetail({
       setGigData({
         title: currentGig?.title ?? defaultGigTitle,
         imageUrl: currentGig?.imageUrl ?? defaultGigImage,
+        profileImageUrl: currentGig?.profileImageUrl ?? defaultProfileImage,
       });
     }, 0);
 
@@ -65,7 +68,7 @@ export default function GigDetail({
   const handleDeleteGig = async () => {
     const gig = readGigFromStorage(id);
 
-    if (!gig?.imageDeleteUrl) {
+    if (!gig?.imageDeleteUrl || !gig.profileImageDeleteUrl) {
       setDeleteError(
         "This gig was created before ImgBB delete support was added. Re-upload it if you need remote image deletion."
       );
@@ -73,7 +76,7 @@ export default function GigDetail({
     }
 
     const confirmed = window.confirm(
-      "Delete this gig and remove its image from ImgBB?"
+      "Delete this gig and remove its cover and profile images from ImgBB?"
     );
 
     if (!confirmed) {
@@ -84,11 +87,14 @@ export default function GigDetail({
     setIsDeleting(true);
 
     try {
-      await deleteImageFromImgBB(gig.imageDeleteUrl);
+      await Promise.all([
+        deleteImageFromImgBB(gig.imageDeleteUrl),
+        deleteImageFromImgBB(gig.profileImageDeleteUrl),
+      ]);
       writeStoredGigs(readStoredGigs().filter((item) => item.id !== id));
       router.push("/");
     } catch {
-      setDeleteError("Unable to delete the image from ImgBB right now.");
+      setDeleteError("Unable to delete the images from ImgBB right now.");
     } finally {
       setIsDeleting(false);
     }
@@ -106,7 +112,7 @@ export default function GigDetail({
 
             <div className="mb-6 flex items-center gap-4">
               <img
-                src="/profile.jpg"
+                src={gigData.profileImageUrl}
                 alt="author"
                 className="h-14 w-14 rounded-full object-cover"
               />

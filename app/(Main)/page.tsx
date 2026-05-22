@@ -41,14 +41,14 @@ export default function HomePage() {
     if (!gig) {
       return;
     }
-    if (!gig.imageDeleteUrl) {
+    if (!gig.imageDeleteUrl || !gig.profileImageDeleteUrl) {
       setDeleteError(
         "This gig was created before ImgBB delete support was added.",
       );
       return;
     }
     const confirmed = window.confirm(
-      "Delete this gig and remove its image from ImgBB?",
+      "Delete this gig and remove its cover and profile images from ImgBB?",
     );
     if (!confirmed) {
       return;
@@ -58,13 +58,16 @@ export default function HomePage() {
     setDeletingGigId(gigId);
 
     try {
-      await deleteImageFromImgBB(gig.imageDeleteUrl);
+      await Promise.all([
+        deleteImageFromImgBB(gig.imageDeleteUrl),
+        deleteImageFromImgBB(gig.profileImageDeleteUrl),
+      ]);
 
       const nextGigs = gigs.filter((item) => item.id !== gigId);
       writeStoredGigs(nextGigs);
       setGigs(nextGigs);
     } catch {
-      setDeleteError("Unable to delete the image from ImgBB right now.");
+      setDeleteError("Unable to delete the images from ImgBB right now.");
     } finally {
       setDeletingGigId(null);
     }
@@ -98,6 +101,7 @@ export default function HomePage() {
                 id={gig.id}
                 title={gig.title}
                 imageSrc={gig.imageUrl}
+                profileImageSrc={gig.profileImageUrl}
                 onDelete={() => void handleDeleteGig(gig.id)}
                 isDeleting={deletingGigId === gig.id}
               />

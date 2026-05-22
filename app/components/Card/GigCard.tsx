@@ -10,6 +10,7 @@ type GigCardProps = {
   id?: string;
   title?: string;
   imageSrc?: string;
+  profileImageSrc?: string;
   onDelete?: () => void;
   isDeleting?: boolean;
 };
@@ -18,6 +19,7 @@ export default function GigCard({
   id,
   title = "I will be your professional full stack python django web developer",
   imageSrc = "/card2.jpg",
+  profileImageSrc = "/profile.jpg",
   onDelete,
   isDeleting = false,
 }: GigCardProps) {
@@ -40,7 +42,7 @@ export default function GigCard({
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img
-            src="/profile.jpg"
+            src={profileImageSrc}
             alt="Profile image"
             className="w-6 h-6 rounded-full"
           />
