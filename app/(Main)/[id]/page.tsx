@@ -118,7 +118,7 @@ export default function GigDetail({
               />
               <div>
                 <div className="flex items-center gap-3">
-                  <h4 className="text-lg font-semibold">Nafiz Al Turabi</h4>
+                  <h4 className="text-lg font-semibold">John Doe</h4>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">Level 2</p>
                     <div className="-mb-1 flex items-center gap-0.5">

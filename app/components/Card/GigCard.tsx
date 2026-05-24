@@ -44,13 +44,13 @@ export default function GigCard({
           <img
             src={profileImageSrc}
             alt="Profile image"
-            className="w-6 h-6 rounded-full"
+            className="w-6 h-6 rounded-full object-cover"
           />
           <Link
             href="/user/nafiz-al-turabi"
             className="text-sm font-semibold hover:underline"
           >
-            Nafiz Al Turabi
+            John Doe
           </Link>
         </div>
         <div className="flex items-center gap-1">

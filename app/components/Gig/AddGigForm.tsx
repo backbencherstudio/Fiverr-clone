@@ -17,7 +17,9 @@ type AddGigFormProps = {
   variant?: "page" | "modal";
 };
 
-const TITLE_PREFIX = "I will do";
+const TITLE_PREFIX = "I will";
+const TITLE_MAX_LENGTH = 80;
+const TITLE_VALUE_MAX_LENGTH = TITLE_MAX_LENGTH - `${TITLE_PREFIX} `.length;
 const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY?.trim() ?? "";
 
 function buildGigTitle(value: string) {
@@ -53,7 +55,11 @@ export default function AddGigForm({
   });
   const titleField = register("title", {
     required: "Gig title is required",
-    validate: (value) => value.trim().length > 0 || 'Add a few words after "I will do"',
+    validate: (value) => value.trim().length > 0 || 'Add a few words after "I will"',
+    maxLength: {
+      value: TITLE_VALUE_MAX_LENGTH,
+      message: `Gig title must be ${TITLE_MAX_LENGTH} characters or fewer`,
+    },
   });
   const imagePreview = useMemo(() => {
     const file = imageFiles?.[0];
@@ -265,6 +271,7 @@ export default function AddGigForm({
                 id="title"
                 type="text"
                 placeholder="modern website design for your business"
+                maxLength={TITLE_VALUE_MAX_LENGTH}
                 className="h-full w-full bg-transparent pl-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
                 {...titleField}
               />
